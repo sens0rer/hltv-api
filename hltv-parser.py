@@ -85,12 +85,25 @@ def getPlayerInfo(playerid, nickname):
 
     return playerInfo
 
+def _getDetailedGameStats(mapurl):
+    """
+    Returns detailed stats about a game played
+    mapurl - string(example: https://www.hltv.org/stats/matches/mapstatsid/144917/sprout-vs-faze)
+    """
+    stats = {}
+    page = requests.get(mapurl)
+    htmlstr = page.text
+    
+    return htmlstr
+    
+    
 def getFinishedMatchInfo(url):
     """
-    Returns a dictionary of match stats
+    Returns a dictionary of basic match stats
     """
     matchInfo = {}
     matchInfo['URL'] = url
+    matchInfo['ID'] = url.split("/")[4]
     page = requests.get(url)
     htmlstr = page.text
     
@@ -143,6 +156,30 @@ def getFinishedMatchInfo(url):
             matchInfo['Team 1 points'] = 0
             matchInfo['Team 2 points'] = 1
     
+    # Detailed stat url
+    start = htmlstr.find('small-padding stats-detailed-stats')
+    detailedStats = htmlstr[start:]
+    start = detailedStats.find('href')
+    detailedStats = detailedStats[start+6:]
+    end = detailedStats.find('"')
+    detailedStats = detailedStats[0:end]
+    matchInfo['Detailed stats'] = "https://www.hltv.org" + detailedStats
+    
+    # Urls to stats of every map
+    matchInfo['Single map stat URLs'] = []
+    if matchInfo['bo?'] > 1:
+        page2 = requests.get(matchInfo['Detailed stats'])
+        htmlstr2 = page2.text
+        for i in range(matchInfo['bo?']):
+            start = htmlstr2.find('class="stats-match-map-winner-logo"')
+            htmlstr2 = htmlstr2[start:]
+            start = htmlstr2.find('href')
+            htmlstr2 = htmlstr2[start+6:]
+            end = htmlstr2.find('"')
+            matchInfo['Single map stat URLs'].append("https://www.hltv.org" + htmlstr2[0:end])
+    else:
+        matchInfo['Single map stat URLs'] = [matchInfo['Detailed stats']]
+    
     print(matchInfo)
     return htmlstr
 
@@ -150,4 +187,5 @@ def getUpcomingMatchInfo(url):
     pass
 
 # matches = hltv.get_matches()
-mInfo = getFinishedMatchInfo('https://www.hltv.org/matches/2358424/faze-vs-sprout-iem-road-to-rio-2022-europe-rmr-a')
+mInfo = _getDetailedGameStats('https://www.hltv.org/stats/matches/mapstatsid/144922/faze-vs-sprout')
+
