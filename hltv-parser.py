@@ -94,6 +94,50 @@ def _getDetailedGameStats(mapurl):
     page = requests.get(mapurl)
     htmlstr = page.text
     
+    # Map name
+    start = htmlstr.find('<span class="bold">Map</span>')
+    mapPlayed = htmlstr[start+36:]
+    end = mapPlayed.find("\n")
+    mapPlayed = mapPlayed[0:end]
+    stats['Map'] = mapPlayed
+    
+    # Team scores, rounds won
+    start = htmlstr.find('team-left')
+    score1 = htmlstr[start:]
+    end = score1.find("</div>")
+    score1 = score1[0:end]
+    start = score1.find('won')
+    if start != -1:
+        stats['Team 1 score'] = 1
+        stats['Team 2 score'] = 0
+        score1 = score1[start+5:]
+        stats['Team 1 rounds won'] = int(score1)
+        
+        start = htmlstr.find('team-right')
+        score2 = htmlstr[start:]
+        end = score2.find("</div>")
+        score2 = score2[0:end]
+        start = score2.find('lost')
+        score2 = score2[start+6:]
+        stats['Team 2 rounds won'] = int(score2)
+        
+    else:
+        stats['Team 1 score'] = 0
+        stats['Team 2 score'] = 1
+        start = score1.find('lost')
+        score1 = score1[start+6:]
+        stats['Team 1 rounds won'] = int(score1)
+        
+        start = htmlstr.find('team-right')
+        score2 = htmlstr[start:]
+        end = score2.find("</div>")
+        score2 = score2[0:end]
+        start = score2.find('won')
+        score2 = score2[start+5:]
+        stats['Team 2 rounds won'] = int(score2)
+
+    
+    print(stats)
     return htmlstr
     
     
@@ -188,4 +232,7 @@ def getUpcomingMatchInfo(url):
 
 # matches = hltv.get_matches()
 mInfo = _getDetailedGameStats('https://www.hltv.org/stats/matches/mapstatsid/144922/faze-vs-sprout')
-
+start = mInfo.find('team-left')
+mInfo = mInfo[start:]
+end = mInfo.find("</div>")
+mInfo = mInfo[0:end]
