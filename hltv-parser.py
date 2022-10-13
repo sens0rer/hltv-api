@@ -135,10 +135,50 @@ def _getDetailedGameStats(mapurl):
         start = score2.find('won')
         score2 = score2[start+5:]
         stats['Team 2 rounds won'] = int(score2)
-
     
-    print(stats)
-    return htmlstr
+    # Starting team
+    roundsWon = []
+    start = htmlstr.find('match-info-row')
+    halvesInfo = htmlstr[start:]
+    end = halvesInfo.find("Breakdown")
+    halvesInfo = halvesInfo[0:end]
+    ct = halvesInfo.find('"ct-color"')
+    t = halvesInfo.find('"t-color"')
+    if ct < t:
+        stats['Team 1 starting team'] = 'CT'
+        stats['Team 2 starting team'] = 'T'
+    else:
+        stats['Team 1 starting team'] = 'T'
+        stats['Team 2 starting team'] = 'CT'
+    
+    # Rounds won by team
+    halvesInfo = halvesInfo.split("<")
+    count = 0
+    for string in halvesInfo:
+        if string.split(">")[-1].isdigit():
+            if count > 1:
+                roundsWon.append(int(string.split(">")[-1]))
+            count += 1
+            continue
+        if count > 5:
+            start = string.find(")")
+            string = string[start+1:]
+            start = string.find("(")
+            end = string.find(":")
+            roundsWon.append(int(string[start+2:end]))
+            start = string.find(":")
+            end = string.find(")")
+            roundsWon.append(int(string[start+2:end]))
+            break
+    stats['Half results'] = []
+    for i in range(int(len(roundsWon)/2)):
+        stats['Half results'].append((roundsWon[2 * i], roundsWon[2 * i + 1]))
+    
+    
+    
+    
+    # print(stats)
+    return stats
     
     
 def getFinishedMatchInfo(url):
@@ -231,8 +271,10 @@ def getUpcomingMatchInfo(url):
     pass
 
 # matches = hltv.get_matches()
-mInfo = _getDetailedGameStats('https://www.hltv.org/stats/matches/mapstatsid/144922/faze-vs-sprout')
-start = mInfo.find('team-left')
-mInfo = mInfo[start:]
-end = mInfo.find("</div>")
-mInfo = mInfo[0:end]
+# mInfo = _getDetailedGameStats('https://www.hltv.org/stats/matches/mapstatsid/144917/sprout-vs-faze')
+# start = mInfo.find('match-info-row')
+# mInfo = mInfo[start:]
+# end = mInfo.find("Breakdown")
+# mInfo = mInfo[0:end]
+
+        
