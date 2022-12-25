@@ -175,6 +175,8 @@ def _getDetailedGameStats(mapurl):
         if count > 5:
             start = string.find(")")
             string = string[start+1:]
+            if not string:
+                break
             start = string.find("(")
             end = string.find(":")
             roundsWon.append(int(string[start+2:end]))
@@ -401,8 +403,17 @@ def getFinishedMatchInfo(url):
         matchInfo['Single map stat URLs'] = [
             matchInfo['Detailed stats']]
 
-    print(matchInfo)
-    return htmlstr
+    mapstats = []
+    for i, url in enumerate(matchInfo['Single map stat URLs']):
+        mapstats.append(_getDetailedGameStats(url))
+    matchInfo['Single map stats'] = mapstats
+
+    matchInfo['Team 1 players'] = [
+        x for x in matchInfo['Single map stats'][0]['Team 1 overall match stats'].keys()]
+    matchInfo['Team 2 players'] = [
+        x for x in matchInfo['Single map stats'][0]['Team 2 overall match stats'].keys()]
+
+    return matchInfo
 
 
 def getUpcomingMatchInfo(url):
@@ -410,5 +421,7 @@ def getUpcomingMatchInfo(url):
 
 
 # matches = hltv.get_matches()
-mInfo = _getDetailedGameStats(
-    'https://www.hltv.org/stats/matches/mapstatsid/144917/sprout-vs-faze')
+mInfo = getFinishedMatchInfo(
+    'https://www.hltv.org/matches/2358424/faze-vs-sprout-iem-road-to-rio-2022-europe-rmr-a')
+# mInfo = _getDetailedGameStats(
+#     'https://www.hltv.org/stats/matches/mapstatsid/144922/faze-vs-sprout')
